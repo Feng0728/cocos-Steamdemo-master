@@ -13,7 +13,6 @@ export class TileMapManager extends Component {
   async init() {
     const spriteFrames = await ResourceManager.Instance.loadDir('texture/tile');
     const { mapInfo } = DateManager.Instance;
-    console.log(spriteFrames);
     for (let i = 0; i < mapInfo.length; i++) {
       const row = mapInfo[i];
       for (let j = 0; j < row.length; j++) {

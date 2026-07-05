@@ -1,5 +1,4 @@
 import { _decorator, Component, Layers, Node, resources, Sprite, SpriteFrame, UITransform } from 'cc';
-import levels from '../../Levels/Level1';
 const { ccclass, property } = _decorator;
 
 export const TILE_WIDTH = 55; // 瓦片宽度

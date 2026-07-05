@@ -1,14 +1,27 @@
 import { _decorator, Component, Node } from 'cc';
 import { TILE_HEIGHT, TILE_WIDTH, TileMapManager } from '../Tile/TileMapManager';
-import levels, { ILevel } from '../../Levels/Level1';
+import levels, { ILevel } from '../../Levels';
 import { creatUINode } from '../../Utils';
 import DateManager from '../../Runtime/DateManager';
+import EventManager from '../../Runtime/EventManager';
+import { EVENT_ENUM } from '../../Enums';
 const { ccclass, property } = _decorator;
 
 @ccclass('BattleManager')
 export class BattleManager extends Component {
     level: ILevel
     stage: Node
+
+    // 绑定事件
+    onLoad(){
+        EventManager.Instance.on(EVENT_ENUM.NEXT_LEVEL,this.nextLevel,this);
+    }
+
+    // 解绑事件
+    onDestroy(){
+        EventManager.Instance.off(EVENT_ENUM.NEXT_LEVEL,this.nextLevel);
+    }
+
     start() {
         this.generateStage();
         this.initLevel();
@@ -16,8 +29,11 @@ export class BattleManager extends Component {
 
     // 初始化关卡
     initLevel(){
-        const level = levels[`Level${1}`];
+        const level = levels[`Level${DateManager.Instance.levelIndex}`];
         if(level){
+
+            this.clearLevel();
+
             this.level = level;
 
             DateManager.Instance.mapInfo = this.level.mapInfo;
@@ -26,6 +42,18 @@ export class BattleManager extends Component {
 
             this.generateTileMap();
         }
+    }
+
+    // 下一关
+    nextLevel(){
+        DateManager.Instance.levelIndex++;
+        this.initLevel();
+    }
+
+    // 清除关卡
+    clearLevel(){
+        this.stage.destroyAllChildren();
+        DateManager.Instance.reset();
     }
 
     // 生成舞台
