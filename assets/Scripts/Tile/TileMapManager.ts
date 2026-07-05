@@ -1,7 +1,8 @@
 import { _decorator, Component, Layers, Node, resources, Sprite, SpriteFrame, UITransform } from 'cc';
 import { TileManager } from './TileManager';
-import { creatUINode } from '../../Utils';
-import { DateManagerInstance } from '../../Runtime/DateManager';
+import { creatUINode, randomByRange } from '../../Utils';
+import DateManager from '../../Runtime/DateManager';
+import ResourceManager from '../../Runtime/ResourceManager';
 const { ccclass, property } = _decorator;
 
 export const TILE_WIDTH = 55; // 瓦片宽度
@@ -10,8 +11,8 @@ export const TILE_HEIGHT = 55; // 瓦片高度
 @ccclass('TileMapManager')
 export class TileMapManager extends Component {
   async init() {
-    const spriteFrames = await this.loadRes();
-    const { mapInfo } = DateManagerInstance;
+    const spriteFrames = await ResourceManager.Instance.loadDir('texture/tile');
+    const { mapInfo } = DateManager.Instance;
     console.log(spriteFrames);
     for (let i = 0; i < mapInfo.length; i++) {
       const row = mapInfo[i];
@@ -21,8 +22,14 @@ export class TileMapManager extends Component {
           continue;
         }
 
+        let number = tileType.src;
+        if((number == 1|| number == 5 || number == 9) && i%2 == 0 && j%2 == 0){
+          number += randomByRange(0,4);
+        }
+
+        const imgSrc = `tile (${number})`;
+
         const node = creatUINode();
-        const imgSrc = `tile (${tileType.src})`;
         const spriteFrame = spriteFrames.find((frame: SpriteFrame) => frame.name === imgSrc) || null;
         const tileManager = node.addComponent(TileManager);
         tileManager.init(spriteFrame,i,j);
@@ -30,19 +37,5 @@ export class TileMapManager extends Component {
         node.setParent(this.node);
       }
     }
-  }
-
-  // 加载资源
-  loadRes(){
-    return new Promise<SpriteFrame[]>((resolve, reject) => {
-      resources.loadDir('texture/tile', SpriteFrame, (err, assets) => {
-        if (err) {
-          reject(err);
-          return;
-        } else {
-          resolve(assets);
-        }
-      });
-    });
   }
 }

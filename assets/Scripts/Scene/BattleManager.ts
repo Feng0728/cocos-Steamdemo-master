@@ -2,7 +2,7 @@ import { _decorator, Component, Node } from 'cc';
 import { TILE_HEIGHT, TILE_WIDTH, TileMapManager } from '../Tile/TileMapManager';
 import levels, { ILevel } from '../../Levels/Level1';
 import { creatUINode } from '../../Utils';
-import { DateManagerInstance } from '../../Runtime/DateManager';
+import DateManager from '../../Runtime/DateManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('BattleManager')
@@ -20,9 +20,9 @@ export class BattleManager extends Component {
         if(level){
             this.level = level;
 
-            DateManagerInstance.mapInfo = this.level.mapInfo;
-            DateManagerInstance.mapRowCount = this.level.mapInfo.length || 0;
-            DateManagerInstance.mapColCount = this.level.mapInfo[0].length || 0;
+            DateManager.Instance.mapInfo = this.level.mapInfo;
+            DateManager.Instance.mapRowCount = this.level.mapInfo.length || 0;
+            DateManager.Instance.mapColCount = this.level.mapInfo[0].length || 0;
 
             this.generateTileMap();
         }
@@ -49,7 +49,7 @@ export class BattleManager extends Component {
 
     // 舞台适配位置
     adaptPos() {
-        const { mapRowCount, mapColCount } = DateManagerInstance;
+        const { mapRowCount, mapColCount } = DateManager.Instance;
         const disX = TILE_WIDTH * mapColCount / 2;
         const disY = TILE_HEIGHT * mapRowCount / 2 + 80;
 

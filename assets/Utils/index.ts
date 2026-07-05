@@ -8,3 +8,8 @@ export const creatUINode = (name: string = '') => {
   node.layer = Layers.Enum.UI_2D;
   return node;
 }
+
+// 随机函数
+export const randomByRange = (start:number,end:number)=>{
+  return Math.floor(start + (end-start)*Math.random());
+}
