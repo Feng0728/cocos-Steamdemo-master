@@ -5,6 +5,7 @@ import { creatUINode } from '../../Utils';
 import DateManager from '../../Runtime/DateManager';
 import EventManager from '../../Runtime/EventManager';
 import { EVENT_ENUM } from '../../Enums';
+import { PlayerManager } from '../Player/PlayerManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('BattleManager')
@@ -41,6 +42,7 @@ export class BattleManager extends Component {
             DateManager.Instance.mapColCount = this.level.mapInfo[0].length || 0;
 
             this.generateTileMap();
+            this.generatePlayer();
         }
     }
 
@@ -73,6 +75,14 @@ export class BattleManager extends Component {
         tileMapManager.init();
 
         this.adaptPos();
+    }
+
+    // 生成玩家
+    generatePlayer(){
+        const player = creatUINode();
+        player.setParent(this.stage);
+        const playerManager = player.addComponent(PlayerManager);
+        playerManager.init();
     }
 
     // 舞台适配位置
