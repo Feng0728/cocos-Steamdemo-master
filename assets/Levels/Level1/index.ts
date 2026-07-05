@@ -14,7 +14,7 @@ export interface ILevel {
 }
 
 // 定义关卡数据
-const levels = {
+const levels :Record<string, ILevel>= {
   Level1,
 };
 
