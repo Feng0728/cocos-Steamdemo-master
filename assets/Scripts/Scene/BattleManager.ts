@@ -78,11 +78,11 @@ export class BattleManager extends Component {
     }
 
     // 生成玩家
-    generatePlayer(){
+    async generatePlayer(){
         const player = creatUINode();
         player.setParent(this.stage);
         const playerManager = player.addComponent(PlayerManager);
-        playerManager.init();
+        await playerManager.init();
     }
 
     // 舞台适配位置

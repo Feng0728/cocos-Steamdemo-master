@@ -1,3 +1,4 @@
+// 地块类型枚举
 export enum TILE_TYPE_ENUM {
   WALL_ROW = "WALL_ROW",
   WALL_COLUMN = "WALL_COLUMN",
@@ -11,6 +12,18 @@ export enum TILE_TYPE_ENUM {
   FLOOR = "FLOOR",
 }
 
+// 事件枚举
 export enum EVENT_ENUM {
-  NEXT_LEVEL = "nextLevel",
+  NEXT_LEVEL = "NEXT_LEVEL",
+  PLAYER_CTRL = "PLAYER_CTRL",
+}
+
+// 控制器枚举
+export enum CONTROLLER_ENUM {
+  TOP = "TOP",
+  BOTTOM = "BOTTOM",
+  LEFT = "LEFT",
+  RIGHT = "RIGHT",
+  TURNLEFT = "TURNLEFT",
+  TURNRIGHT = "TURNRIGHT",
 }
