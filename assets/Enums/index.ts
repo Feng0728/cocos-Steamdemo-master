@@ -27,3 +27,15 @@ export enum CONTROLLER_ENUM {
   TURNLEFT = "TURNLEFT",
   TURNRIGHT = "TURNRIGHT",
 }
+
+// 状态机参数类型枚举
+export enum FSM_PARAMS_TYPE_ENUM {
+  TRIGGER = "TRIGGER",
+  NUMBER = "NUMBER",
+}
+
+// 状态机参数名称枚举
+export enum PARAME_NAME_ENUM{
+  IDLE = "IDLE",
+  TURNLEFT = "TURNLEFT",
+}

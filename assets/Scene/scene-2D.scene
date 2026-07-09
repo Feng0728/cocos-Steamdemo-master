@@ -773,7 +773,7 @@
     "component": "",
     "_componentId": "225bdLFevxCR7tzxTJgzFhJ",
     "handler": "handleCtrl",
-    "customEventData": ""
+    "customEventData": "TURNLEFT"
   },
   {
     "__type__": "cc.Node",
