@@ -1,7 +1,7 @@
 import { _decorator, Component, Node, resources, Sprite, SpriteFrame, UITransform, Animation, AnimationClip, animation } from 'cc';
 import { TILE_HEIGHT, TILE_WIDTH } from '../Tile/TileManager';
 import ResourceManager from '../../Runtime/ResourceManager';
-import { CONTROLLER_ENUM, EVENT_ENUM, PARAME_NAME_ENUM } from '../../Enums';
+import { CONTROLLER_ENUM, DIRECTION_ENUM, DIRECTION_ORDER_ENUM, ENTITY_STATE_ENUM, EVENT_ENUM, PARAMS_NAME_ENUM } from '../../Enums';
 import EventManager from '../../Runtime/EventManager';
 import { PlayerStateMachine } from './PlayerStateMachine';
 const { ccclass, property } = _decorator;
@@ -17,6 +17,29 @@ export class PlayerManager extends Component {
   private readonly speed:number = 1/10;
   fsm:PlayerStateMachine = null;
 
+  private _direction:DIRECTION_ENUM;
+  private _state:ENTITY_STATE_ENUM;
+
+  // 获取玩家方向
+  get direction():DIRECTION_ENUM{
+    return this._direction;
+  }
+  // 设置玩家方向
+  set direction(newDirection:DIRECTION_ENUM){
+    this._direction = newDirection;
+    this.fsm.setParams(PARAMS_NAME_ENUM.DIRECTION,DIRECTION_ORDER_ENUM[this._direction]);
+  }
+
+  // 获取玩家状态
+  get state():ENTITY_STATE_ENUM{
+    return this._state;
+  }
+  // 设置玩家状态
+  set state(newState:ENTITY_STATE_ENUM){
+    this._state = newState;
+    this.fsm.setParams(this._state,true);
+  }
+
   // 初始化玩家
   async init(){
     const sprite = this.addComponent(Sprite);
@@ -27,7 +50,8 @@ export class PlayerManager extends Component {
 
     this.fsm = this.addComponent(PlayerStateMachine);
     await this.fsm.init();
-    this.fsm.setParams(PARAME_NAME_ENUM.IDLE,true);
+    this.direction = DIRECTION_ENUM.TOP;
+    this.state = ENTITY_STATE_ENUM.IDLE;
 
     EventManager.Instance.on(EVENT_ENUM.PLAYER_CTRL,this.move,this);
   }
@@ -68,7 +92,16 @@ export class PlayerManager extends Component {
     }else if(inputDirection == CONTROLLER_ENUM.RIGHT){
       this.targetX = this.x + 1;
     }else if(inputDirection == CONTROLLER_ENUM.TURNLEFT){
-      this.fsm.setParams(PARAME_NAME_ENUM.TURNLEFT,true);
+      if(this.direction == DIRECTION_ENUM.TOP){
+        this.direction = DIRECTION_ENUM.LEFT;
+      }else if(this.direction == DIRECTION_ENUM.LEFT){
+        this.direction = DIRECTION_ENUM.BOTTOM;
+      }else if(this.direction == DIRECTION_ENUM.BOTTOM){
+        this.direction = DIRECTION_ENUM.RIGHT;
+      }else if(this.direction == DIRECTION_ENUM.RIGHT){
+        this.direction = DIRECTION_ENUM.TOP;
+      }
+      this.state = ENTITY_STATE_ENUM.TURNLEFT;
     }
   }
 

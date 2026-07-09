@@ -35,7 +35,30 @@ export enum FSM_PARAMS_TYPE_ENUM {
 }
 
 // 状态机参数名称枚举
-export enum PARAME_NAME_ENUM{
+export enum PARAMS_NAME_ENUM{
   IDLE = "IDLE",
   TURNLEFT = "TURNLEFT",
+  DIRECTION = "DIRECTION",
+}
+
+// 方向枚举
+export enum DIRECTION_ENUM{
+  TOP = "TOP",
+  BOTTOM = "BOTTOM",
+  LEFT = "LEFT",
+  RIGHT = "RIGHT",
+}
+
+// 实体状态枚举
+export enum ENTITY_STATE_ENUM{
+  IDLE = "IDLE",
+  TURNLEFT = "TURNLEFT",
+}
+
+// 方向数字枚举
+export enum DIRECTION_ORDER_ENUM{
+  TOP = 0,
+  BOTTOM = 1,
+  LEFT = 2,
+  RIGHT = 3,
 }

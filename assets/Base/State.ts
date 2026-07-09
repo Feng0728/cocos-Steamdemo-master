@@ -1,6 +1,6 @@
 import { animation, AnimationClip, Sprite, SpriteFrame } from "cc";
-import { PlayerStateMachine } from "../Scripts/Player/PlayerStateMachine";
 import ResourceManager from "../Runtime/ResourceManager";
+import { StateMachine } from "./StateMachine";
 
 const ANIMATION_SPEED = 1/8;
 
@@ -11,7 +11,7 @@ const ANIMATION_SPEED = 1/8;
 export default class State{
   private animationClip:AnimationClip;
 
-  constructor(private fsm:PlayerStateMachine,
+  constructor(private fsm:StateMachine,
     private path:string,
     private wrapMode:AnimationClip.WrapMode = AnimationClip.WrapMode.Normal){
       this.init();
@@ -35,6 +35,8 @@ export default class State{
 
     // 最后将轨道添加到动画剪辑以应用
     this.animationClip.addTrack(track);
+    // 动画剪辑的名称
+    this.animationClip.name = this.path;
      // 整个动画剪辑的周期
     this.animationClip.duration = ANIMATION_SPEED * spriteFrames.length;
     // 循环播放
