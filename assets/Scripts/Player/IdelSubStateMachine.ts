@@ -6,7 +6,7 @@ import { DirectionSubStateMachine } from "../../Base/DirectionSubStateMachine";
 
 const BASE_URL = "texture/player/idle/";
 
-// 空闲子状态机
+// 子状态机：空闲
 export class IdelSubStateMachine extends DirectionSubStateMachine {
   constructor(fsm:StateMachine){
     super(fsm);

@@ -3,10 +3,10 @@ import { StateMachine } from "../../Base/StateMachine";
 import { DIRECTION_ENUM } from "../../Enums";
 import { DirectionSubStateMachine } from "../../Base/DirectionSubStateMachine";
 
-const BASE_URL = "texture/player/turnleft/";
+const BASE_URL = "texture/player/blockback/";
 
-// 子状态机：左转
-export class TurnLeftSubStateMachine extends DirectionSubStateMachine {
+// 子状态机：后退
+export class BlockBackSubStateMachine extends DirectionSubStateMachine {
 
   constructor(fsm:StateMachine){
     super(fsm);

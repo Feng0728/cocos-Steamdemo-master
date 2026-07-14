@@ -86,100 +86,143 @@ export class PlayerManager extends EntityManager {
         this.direction = DIRECTION_ENUM.TOP;
       }
       this.state = ENTITY_STATE_ENUM.TURNLEFT;
+    }else if(inputDirection == CONTROLLER_ENUM.TURNRIGHT){
+      if(this.direction == DIRECTION_ENUM.TOP){
+        this.direction = DIRECTION_ENUM.RIGHT;
+      }else if(this.direction == DIRECTION_ENUM.RIGHT){
+        this.direction = DIRECTION_ENUM.BOTTOM;
+      }else if(this.direction == DIRECTION_ENUM.BOTTOM){
+        this.direction = DIRECTION_ENUM.LEFT;
+      }else if(this.direction == DIRECTION_ENUM.LEFT){
+        this.direction = DIRECTION_ENUM.TOP;
+      }
+      this.state = ENTITY_STATE_ENUM.TURNRIGHT;
     }
   }
 
   // 检查是否被阻塞
   willBlock(inputDirection:CONTROLLER_ENUM){
     const {targetX:x,targetY:y,direction} = this;
-    const {tileInfo} = DateManager.Instance;
-    // 前进检查
-    if(inputDirection == CONTROLLER_ENUM.TOP){
-      if(direction == DIRECTION_ENUM.TOP){
-        const playerNextY = y-1;
-        const weaponNextY = y-2;
-        if(playerNextY < 0){
-          return true;
-        }
+    const {tileInfo, mapRowCount, mapColCount} = DateManager.Instance;
 
-        const playerTile = tileInfo[x][playerNextY];
-        const weaponTile = tileInfo[x][weaponNextY];
-
-        if(playerTile && playerTile.moveable && (!weaponTile || weaponTile.turnable)
-        ){
-          //empty
-        }else{
-          return true;
-        }
-
-      }
-    }else if(inputDirection == CONTROLLER_ENUM.TURNLEFT){ // 左转检查
-      let nextX;
-      let nextY;
-      if(direction == DIRECTION_ENUM.TOP){
-        nextX = x-1;
-        nextY = y-1;
-      }else if(direction == DIRECTION_ENUM.LEFT){
-        nextX = x-1;
-        nextY = y+1;
-      }else if(direction == DIRECTION_ENUM.BOTTOM){
-        nextX = x+1;
-        nextY = y+1;
-      }else if(direction == DIRECTION_ENUM.RIGHT){
-        nextX = x+1;
-        nextY = y-1;
-      }
-
-      if((!tileInfo[x][nextY] || tileInfo[x][nextY].turnable) &&
-        (!tileInfo[nextX][y] || tileInfo[nextX][y].turnable) &&
-        (!tileInfo[nextX][nextY] || tileInfo[nextX][nextY].turnable)
-      ){
-        //empty
-      }else{
+    const isTileBlocked = (tx: number, ty: number): boolean => {
+      if(tx < 0 || tx >= mapColCount || ty < 0 || ty >= mapRowCount){
         return true;
       }
+      const tile = tileInfo[tx]?.[ty];
+      return !tile || !tile.turnable;
+    };
 
-    }else if(inputDirection == CONTROLLER_ENUM.BOTTOM){ // 后退检查
-      if(direction == DIRECTION_ENUM.BOTTOM){
-        const playerNextY = y+1;
-        const weaponNextY = y+2;
-        if(playerNextY >= DateManager.Instance.mapRowCount){
-          return true;
-        }
-
-        const playerTile = tileInfo[x][playerNextY];
-        const weaponTile = tileInfo[x][weaponNextY];
-
-        if(playerTile && playerTile.moveable && (!weaponTile || weaponTile.turnable)
-        ){
-          //empty
-        }else{
-          return true;
-        }
+    const isMoveBlocked = (px: number, py: number, wx: number, wy: number): boolean => {
+      if(px < 0 || px >= mapColCount || py < 0 || py >= mapRowCount){
+        return true;
       }
-    }else if(inputDirection == CONTROLLER_ENUM.TURNRIGHT){ // 右转检查
-      let nextX;
-      let nextY;
+      const playerTile = tileInfo[px]?.[py];
+      const weaponTile = tileInfo[wx]?.[wy];
+      return !playerTile || !playerTile.moveable || (weaponTile && !weaponTile.turnable);
+    };
+
+    // 根据玩家朝向计算武器移动后的位置（武器永远在玩家前方一格）
+    const getWeaponNext = (pnX: number, pnY: number): [number, number] => {
+      switch(direction){
+        case DIRECTION_ENUM.TOP: return [pnX, pnY - 1];
+        case DIRECTION_ENUM.BOTTOM: return [pnX, pnY + 1];
+        case DIRECTION_ENUM.LEFT: return [pnX - 1, pnY];
+        default: return [pnX + 1, pnY]; // RIGHT
+      }
+    };
+
+    // 根据移动方向和玩家朝向，计算相对的格挡状态
+    const getBlockState = (button: CONTROLLER_ENUM): ENTITY_STATE_ENUM => {
+      if(button === CONTROLLER_ENUM.TOP){
+        if(direction === DIRECTION_ENUM.TOP) return ENTITY_STATE_ENUM.BLOCKFRONT;
+        if(direction === DIRECTION_ENUM.BOTTOM) return ENTITY_STATE_ENUM.BLOCKBACK;
+        if(direction === DIRECTION_ENUM.LEFT) return ENTITY_STATE_ENUM.BLOCKRIGHT;
+        return ENTITY_STATE_ENUM.BLOCKLEFT;
+      }
+      if(button === CONTROLLER_ENUM.BOTTOM){
+        if(direction === DIRECTION_ENUM.TOP) return ENTITY_STATE_ENUM.BLOCKBACK;
+        if(direction === DIRECTION_ENUM.BOTTOM) return ENTITY_STATE_ENUM.BLOCKFRONT;
+        if(direction === DIRECTION_ENUM.LEFT) return ENTITY_STATE_ENUM.BLOCKLEFT;
+        return ENTITY_STATE_ENUM.BLOCKRIGHT;
+      }
+      if(button === CONTROLLER_ENUM.LEFT){
+        if(direction === DIRECTION_ENUM.TOP) return ENTITY_STATE_ENUM.BLOCKLEFT;
+        if(direction === DIRECTION_ENUM.BOTTOM) return ENTITY_STATE_ENUM.BLOCKRIGHT;
+        if(direction === DIRECTION_ENUM.LEFT) return ENTITY_STATE_ENUM.BLOCKFRONT;
+        return ENTITY_STATE_ENUM.BLOCKBACK;
+      }
+      // button === RIGHT
+      if(direction === DIRECTION_ENUM.TOP) return ENTITY_STATE_ENUM.BLOCKRIGHT;
+      if(direction === DIRECTION_ENUM.BOTTOM) return ENTITY_STATE_ENUM.BLOCKLEFT;
+      if(direction === DIRECTION_ENUM.LEFT) return ENTITY_STATE_ENUM.BLOCKBACK;
+      return ENTITY_STATE_ENUM.BLOCKFRONT;
+    };
+
+    if(inputDirection == CONTROLLER_ENUM.TOP){
+      const playerNextY = y - 1;
+      const [wx, wy] = getWeaponNext(x, playerNextY);
+      if(isMoveBlocked(x, playerNextY, wx, wy)){
+        this.state = getBlockState(CONTROLLER_ENUM.TOP);
+        return true;
+      }
+    }else if(inputDirection == CONTROLLER_ENUM.BOTTOM){
+      const playerNextY = y + 1;
+      const [wx, wy] = getWeaponNext(x, playerNextY);
+      if(isMoveBlocked(x, playerNextY, wx, wy)){
+        this.state = getBlockState(CONTROLLER_ENUM.BOTTOM);
+        return true;
+      }
+    }else if(inputDirection == CONTROLLER_ENUM.LEFT){
+      const playerNextX = x - 1;
+      const [wx, wy] = getWeaponNext(playerNextX, y);
+      if(isMoveBlocked(playerNextX, y, wx, wy)){
+        this.state = getBlockState(CONTROLLER_ENUM.LEFT);
+        return true;
+      }
+    }else if(inputDirection == CONTROLLER_ENUM.RIGHT){
+      const playerNextX = x + 1;
+      const [wx, wy] = getWeaponNext(playerNextX, y);
+      if(isMoveBlocked(playerNextX, y, wx, wy)){
+        this.state = getBlockState(CONTROLLER_ENUM.RIGHT);
+        return true;
+      }
+    }else if(inputDirection == CONTROLLER_ENUM.TURNLEFT){
+      let nextX: number, nextY: number;
       if(direction == DIRECTION_ENUM.TOP){
-        nextX = x+1;
-        nextY = y-1;
-      }else if(direction == DIRECTION_ENUM.RIGHT){
-        nextX = x+1;
-        nextY = y+1;
-      }else if(direction == DIRECTION_ENUM.BOTTOM){
-        nextX = x-1;
-        nextY = y+1;
+        nextX = x - 1;
+        nextY = y - 1;
       }else if(direction == DIRECTION_ENUM.LEFT){
-        nextX = x-1;
-        nextY = y-1;
-      }
-
-      if((!tileInfo[x][nextY] || tileInfo[x][nextY].turnable) &&
-        (!tileInfo[nextX][y] || tileInfo[nextX][y].turnable) &&
-        (!tileInfo[nextX][nextY] || tileInfo[nextX][nextY].turnable)
-      ){
-        //empty
+        nextX = x - 1;
+        nextY = y + 1;
+      }else if(direction == DIRECTION_ENUM.BOTTOM){
+        nextX = x + 1;
+        nextY = y + 1;
       }else{
+        nextX = x + 1;
+        nextY = y - 1;
+      }
+      if(isTileBlocked(x, nextY) || isTileBlocked(nextX, y) || isTileBlocked(nextX, nextY)){
+        this.state = ENTITY_STATE_ENUM.BLOCKTURNLEFT;
+        return true;
+      }
+    }else if(inputDirection == CONTROLLER_ENUM.TURNRIGHT){
+      let nextX: number, nextY: number;
+      if(direction == DIRECTION_ENUM.TOP){
+        nextX = x + 1;
+        nextY = y - 1;
+      }else if(direction == DIRECTION_ENUM.RIGHT){
+        nextX = x + 1;
+        nextY = y + 1;
+      }else if(direction == DIRECTION_ENUM.BOTTOM){
+        nextX = x - 1;
+        nextY = y + 1;
+      }else{
+        nextX = x - 1;
+        nextY = y - 1;
+      }
+      if(isTileBlocked(x, nextY) || isTileBlocked(nextX, y) || isTileBlocked(nextX, nextY)){
+        this.state = ENTITY_STATE_ENUM.BLOCKTURNRIGHT;
         return true;
       }
     }
