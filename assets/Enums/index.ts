@@ -10,6 +10,7 @@ export enum TILE_TYPE_ENUM {
   CLIFF_RIGHT = "CLIFF_RIGHT",
   CLIFF_CENTER = "CLIFF_CENTER",
   FLOOR = "FLOOR",
+  WALL_NORMAL = "WALL_NORMAL",
 }
 
 // 事件枚举
@@ -61,4 +62,8 @@ export enum DIRECTION_ORDER_ENUM{
   BOTTOM = 1,
   LEFT = 2,
   RIGHT = 3,
+}
+
+export enum ENTITY_TYPE_ENUM{
+  PLAYER = "PLAYER",
 }

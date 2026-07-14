@@ -1,65 +1,40 @@
-import { _decorator, Component, Node, resources, Sprite, SpriteFrame, UITransform, Animation, AnimationClip, animation } from 'cc';
-import { TILE_HEIGHT, TILE_WIDTH } from '../Tile/TileManager';
-import ResourceManager from '../../Runtime/ResourceManager';
-import { CONTROLLER_ENUM, DIRECTION_ENUM, DIRECTION_ORDER_ENUM, ENTITY_STATE_ENUM, EVENT_ENUM, PARAMS_NAME_ENUM } from '../../Enums';
+import { _decorator } from 'cc';
+import { CONTROLLER_ENUM, DIRECTION_ENUM, ENTITY_STATE_ENUM, ENTITY_TYPE_ENUM, EVENT_ENUM} from '../../Enums';
 import EventManager from '../../Runtime/EventManager';
 import { PlayerStateMachine } from './PlayerStateMachine';
-const { ccclass, property } = _decorator;
+import { EntityManager } from '../../Base/EntityManager';
+import DateManager from '../../Runtime/DateManager';
+const { ccclass} = _decorator;
 
 // 玩家管理器
 @ccclass('PlayerManager')
-export class PlayerManager extends Component {
+export class PlayerManager extends EntityManager {
 
-  x:number = 0;
-  y:number = 0;
   targetX:number = 0;
   targetY:number = 0;
-  private readonly speed:number = 1/10;
-  fsm:PlayerStateMachine = null;
-
-  private _direction:DIRECTION_ENUM;
-  private _state:ENTITY_STATE_ENUM;
-
-  // 获取玩家方向
-  get direction():DIRECTION_ENUM{
-    return this._direction;
-  }
-  // 设置玩家方向
-  set direction(newDirection:DIRECTION_ENUM){
-    this._direction = newDirection;
-    this.fsm.setParams(PARAMS_NAME_ENUM.DIRECTION,DIRECTION_ORDER_ENUM[this._direction]);
-  }
-
-  // 获取玩家状态
-  get state():ENTITY_STATE_ENUM{
-    return this._state;
-  }
-  // 设置玩家状态
-  set state(newState:ENTITY_STATE_ENUM){
-    this._state = newState;
-    this.fsm.setParams(this._state,true);
-  }
+  private readonly speed = 1/10;
 
   // 初始化玩家
   async init(){
-    const sprite = this.addComponent(Sprite);
-    sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-
-    const uiTransform = this.getComponent(UITransform);
-    uiTransform.setContentSize(TILE_WIDTH*4, TILE_HEIGHT*4);
-
     this.fsm = this.addComponent(PlayerStateMachine);
     await this.fsm.init();
-    this.direction = DIRECTION_ENUM.TOP;
-    this.state = ENTITY_STATE_ENUM.IDLE;
 
-    EventManager.Instance.on(EVENT_ENUM.PLAYER_CTRL,this.move,this);
+    super.init({
+      x:2,
+      y:8,
+      type:ENTITY_TYPE_ENUM.PLAYER,
+      direction:DIRECTION_ENUM.TOP,
+      state:ENTITY_STATE_ENUM.IDLE,
+    });
+    this.targetX = this.x;
+    this.targetY = this.y;
+
+    EventManager.Instance.on(EVENT_ENUM.PLAYER_CTRL,this.inputHandle,this);
   }
 
   update(dt){
     this.updateXY();
-    // 更新玩家位置
-    this.node.setPosition(this.x * TILE_WIDTH-1.5*TILE_WIDTH, - this.y * TILE_HEIGHT+1.5*TILE_HEIGHT);
+    super.update(dt);
   }
 
   // 更新玩家位置
@@ -79,6 +54,15 @@ export class PlayerManager extends Component {
       this.x = this.targetX;
       this.y = this.targetY;
     }
+  }
+
+
+  inputHandle(inputDirection:CONTROLLER_ENUM){
+    if(this.willBlock(inputDirection)){
+      console.log("玩家被阻塞");
+      return;
+    }
+    this.move(inputDirection);
   }
 
   // 移动玩家
@@ -103,6 +87,103 @@ export class PlayerManager extends Component {
       }
       this.state = ENTITY_STATE_ENUM.TURNLEFT;
     }
+  }
+
+  // 检查是否被阻塞
+  willBlock(inputDirection:CONTROLLER_ENUM){
+    const {targetX:x,targetY:y,direction} = this;
+    const {tileInfo} = DateManager.Instance;
+    // 前进检查
+    if(inputDirection == CONTROLLER_ENUM.TOP){
+      if(direction == DIRECTION_ENUM.TOP){
+        const playerNextY = y-1;
+        const weaponNextY = y-2;
+        if(playerNextY < 0){
+          return true;
+        }
+
+        const playerTile = tileInfo[x][playerNextY];
+        const weaponTile = tileInfo[x][weaponNextY];
+
+        if(playerTile && playerTile.moveable && (!weaponTile || weaponTile.turnable)
+        ){
+          //empty
+        }else{
+          return true;
+        }
+
+      }
+    }else if(inputDirection == CONTROLLER_ENUM.TURNLEFT){ // 左转检查
+      let nextX;
+      let nextY;
+      if(direction == DIRECTION_ENUM.TOP){
+        nextX = x-1;
+        nextY = y-1;
+      }else if(direction == DIRECTION_ENUM.LEFT){
+        nextX = x-1;
+        nextY = y+1;
+      }else if(direction == DIRECTION_ENUM.BOTTOM){
+        nextX = x+1;
+        nextY = y+1;
+      }else if(direction == DIRECTION_ENUM.RIGHT){
+        nextX = x+1;
+        nextY = y-1;
+      }
+
+      if((!tileInfo[x][nextY] || tileInfo[x][nextY].turnable) &&
+        (!tileInfo[nextX][y] || tileInfo[nextX][y].turnable) &&
+        (!tileInfo[nextX][nextY] || tileInfo[nextX][nextY].turnable)
+      ){
+        //empty
+      }else{
+        return true;
+      }
+
+    }else if(inputDirection == CONTROLLER_ENUM.BOTTOM){ // 后退检查
+      if(direction == DIRECTION_ENUM.BOTTOM){
+        const playerNextY = y+1;
+        const weaponNextY = y+2;
+        if(playerNextY >= DateManager.Instance.mapRowCount){
+          return true;
+        }
+
+        const playerTile = tileInfo[x][playerNextY];
+        const weaponTile = tileInfo[x][weaponNextY];
+
+        if(playerTile && playerTile.moveable && (!weaponTile || weaponTile.turnable)
+        ){
+          //empty
+        }else{
+          return true;
+        }
+      }
+    }else if(inputDirection == CONTROLLER_ENUM.TURNRIGHT){ // 右转检查
+      let nextX;
+      let nextY;
+      if(direction == DIRECTION_ENUM.TOP){
+        nextX = x+1;
+        nextY = y-1;
+      }else if(direction == DIRECTION_ENUM.RIGHT){
+        nextX = x+1;
+        nextY = y+1;
+      }else if(direction == DIRECTION_ENUM.BOTTOM){
+        nextX = x-1;
+        nextY = y+1;
+      }else if(direction == DIRECTION_ENUM.LEFT){
+        nextX = x-1;
+        nextY = y-1;
+      }
+
+      if((!tileInfo[x][nextY] || tileInfo[x][nextY].turnable) &&
+        (!tileInfo[nextX][y] || tileInfo[nextX][y].turnable) &&
+        (!tileInfo[nextX][nextY] || tileInfo[nextX][nextY].turnable)
+      ){
+        //empty
+      }else{
+        return true;
+      }
+    }
+    return false;
   }
 
 }
